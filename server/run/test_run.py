@@ -316,6 +316,7 @@ def run_all_cases(target_exec_dir, target, kind_bench, bench_name,
 
     nginx_tmp_log_file = None
 
+
     # if re.search('application', kind_bench) and bench_name == "nginx":
     #     nginx_log_file = {}
     #     nginx_tmp_log_file = {}
@@ -418,7 +419,6 @@ def run_all_cases(target_exec_dir, target, kind_bench, bench_name,
         #     else:
         #         logging.info("Please specify client in the client config file")
         #         continue
-
         logging.debug("Get the server command is: %s" % server_run_command)
         # run the command of the benchmarks
         try:
@@ -429,9 +429,9 @@ def run_all_cases(target_exec_dir, target, kind_bench, bench_name,
         except Exception, e:
             logging.info(e)
             crash_handle.main()
-            if bench_name == bench_test:
-                move_logs = subprocess.call("cp /opt/caliper_nfs/ltp_log/* %s "
-                                            % (Folder.exec_dir), shell=True)
+            # if bench_name == bench_test:
+            #     move_logs = subprocess.call("cp /opt/caliper_nfs/ltp_log/* %s "
+            #                                 % (Folder.exec_dir), shell=True)
             # server_utils.file_copy(tmp_log_file, '/tmp/%s_output.log' %bench_name, 'a+')
             server_utils.file_copy(logfile, tmp_log_file, 'a+')
             if os.path.exists(tmp_log_file):
@@ -459,7 +459,6 @@ def run_all_cases(target_exec_dir, target, kind_bench, bench_name,
                 if os.path.exists(subsection_file):
                     server_utils.file_copy(tmp_log_file, subsection_file, 'a+')
             server_utils.file_copy(logfile, tmp_log_file, 'a+')
-
             # if re.search('application', kind_bench) and bench_name == "nginx":
             #     no_of_clients = configRun.get(sections_run[i], 'no_of_clients')
             #     for j in range(1, int(no_of_clients) + 1):
@@ -490,7 +489,6 @@ def run_all_cases(target_exec_dir, target, kind_bench, bench_name,
                     return result
             if os.path.exists(tmp_log_file):
                 os.remove(tmp_log_file)
-
                 # if re.search('application', kind_bench) and bench_name == "nginx":
                 #     no_of_clients = configRun.get(sections_run[i], 'no_of_clients')
                 #     for j in range(1, int(no_of_clients) + 1):
@@ -734,11 +732,15 @@ def run_commands(exec_dir, bench_name, commands,
         # the commands is multiple lines, and was included by Quotation
         actual_commands = get_actual_commands(commands, target)
         try:
-            actual_commands = 'ansible-playbook -i ~/caliper_output/configuration/config/hosts ' \
-                              '~/.caliper/benchmarks/%s/ansible/%s.yml' % (bench_name, actual_commands)
+            # actual_commands = 'ansible-playbook -i ~/caliper_output/configuration/config/hosts ' \
+            #                   '~/.caliper/benchmarks/%s/ansible/%s.yml' % (bench_name, actual_commands)
             logging.debug("the actual commands running in local is: %s"
                           % actual_commands)
-            result = os.system(actual_commands)
+            os.chdir('%s/.caliper/benchmarks/%s/ansible/' % (os.environ['HOME'], bench_name))
+            result = subprocess.call(
+                'ansible-playbook -i %s/caliper_output/configuration/config/hosts %s.yml -u root' % (
+                os.environ['HOME'], actual_commands), stdout=subprocess.PIPE, shell=True)
+            # result = os.system(actual_commands)
         except error.CmdError, e:
             raise error.ServRunError(e.args[0], e.args[1])
     except Exception, e:
